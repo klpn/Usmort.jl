@@ -16,15 +16,15 @@ It is assumed that you have Julia installed, as well as access to a
 MySQL/MariaDB server where you can create databases.
 
 1. Use the file `src/Usmort.sql` to create the database and the `usmuser` account
-   with SELECT rights on the database tables, e.g.\ `mysql -u root -p
+   with SELECT rights on the database tables, e.g.  `mysql -u root -p
    <Usmort.sql`.
-2. Download the zipped data file for the year you are interested in e.g.\ `
+2. Download the zipped data file for the year you are interested in e.g.  `
    wget
    ftp://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/DVS/mortality/mort2006us.zip`
    Unzip the file.
    Note that the size of the uncompressed data file is more that 1 GB.:
 3. Rename the uncompressed data file to `usdeaths` and use
-   `src/Usdeathsimp.sql` to import it into the database, e.g.\ `mysql -u root -p
+   `src/Usdeathsimp.sql` to import it into the database, e.g.  `mysql -u root -p
    --local-infile=1 <Usdeathsimp.sql`.
 
 ##Usage
@@ -37,7 +37,7 @@ relative number of deaths for a pair of frames returned by `ageca`.
 In order to retrieve all deaths for males in 2006:
 ```julia
 totexpr = "[A-Y]"
- totm06 = ageca(2006, "M", totexpr)
+totm06 = ageca(2006, "M", totexpr)
 ```
 
 In order to retrieve all deaths for females in 2006, with influenza or
