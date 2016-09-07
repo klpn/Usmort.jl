@@ -40,7 +40,7 @@ totexpr = "[A-Y]"
 totm06 = ageca(2006, "M", totexpr)
 ```
 
-In order to retrieve all deaths for females in 2006, with influenza or
+In order to retrieve all deaths among females in 2006, with influenza or
 pneumonia on the death certificate, and then calculate the proportion of these
 deaths with circulatory disease as underlying cause:
 ```julia
@@ -52,3 +52,30 @@ influi06ent = ageca(2006, "F", totexpr, influiexpr)
 circinfluif06ent = ageca(2006, "F", circexpr, influiexpr)
 circinfluif06entp = caprop(circinfluif06ent, influif06ent)
 ```
+
+Queries can be refined by using keywords in the `ageca` calls. If a par of
+numbers `[a,b]` is given as values of the `edu89` and `edu03` keyword arguments,
+the query will select records with the person's education coded according to
+the 1989 and 2003 standards with the education level within the interval
+defined by `[a,b]`.
+
+Further keyword arguments may be given in the format `Field = [expression,
+operator, type]`, where `expression` is an expression to match, `operator` is
+the name of a MySQL comparison operator or function like `REGEXP`, and `type`
+is a MySQL data type (see the documentation to the [MySQL
+package](https://github.com/JuliaDB/MySQL.jl)). See
+[`src/Usdeathsimp.sql`](https://github.com/klpn/Usmort.jl/blob/master/src/Usdeathsimp.sql)
+for valid field names (and compare their position with the documentation for
+the data files). In order to retrieve all 2006 deaths among never-married
+females with lower than high school education:
+```julia
+using Usmort, MySQL
+totexpr = "[A-Y]"
+lowed89 = [0,8]
+lowed03 = [1,1]
+totflowedsing06 = ageca(2006, "F", totexpr; edu89 = lowed89, edu03 = lowed03,
+	Mart = ["S", "=",  MYSQL_TYPE_VARCHAR])
+```
+
+The performance of queries can often be improved by adding indexes on e.g. the
+`Sex` and `Datayear` fields in the `Usdeaths` table.
