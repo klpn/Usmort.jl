@@ -94,8 +94,8 @@ In order to plot age-specific proportions of deaths in 2006 due to tumors (as
 underlying cause) among females for different levels of education:
 ```julia
 using Usmort
-ed06ftot = framedict(2006, "F", :tot, :ed)
-ed06ftum = framedict(2006, "F", :tum, :ed)
+ed06ftot = framedict(2006, :F, :tot, :ed)
+ed06ftum = framedict(2006, :F, :tum, :ed)
 propplot(ed06ftum, ed06ftot)
 ```
 
@@ -103,7 +103,7 @@ In order to plot age-specific proportions of deaths in 2006 due to respiratory
 infection among females stacked by place of death:
 ```julia
 using Usmort
-place06frespinf  = framedict(2006, "F", :respinf, :dplace)
+place06frespinf  = framedict(2006, :F, :respinf, :dplace)
 stackdimplot(place06frespinf)
 ```
 
@@ -111,10 +111,10 @@ In order to plot age-specific proportions of deaths in 2006 and 2014 due to
 tumors among females with short education:
 ```julia
 using Usmort
-ed06ftot = framedict(2006, "F", :tot, :ed)
-ed06ftum = framedict(2006, "F", :tum, :ed)
-ed14ftot = framedict(2014, "F", :tot, :ed)
-ed14ftum = framedict(2014, "F", :tum, :ed)
+ed06ftot = framedict(2006, :F, :tot, :ed)
+ed06ftum = framedict(2006, :F, :tum, :ed)
+ed14ftot = framedict(2014, :F, :tot, :ed)
+ed14ftum = framedict(2014, :F, :tum, :ed)
 edftum = [ed06ftum, ed14ftum]
 edftot = [ed06ftot, ed14ftot]
 groupyearplot(edftum, edftot, 1)
