@@ -33,24 +33,29 @@ death and the concatenation of the entity-axis conditions on the death certifica
 grouped by 27 age groups. The function `caprop` returns a DataFrame with the
 relative number of deaths for a pair of frames returned by `ageca`.
 
+Data for some causes of death and dimensions such as race, level of education,
+martial status and place of death is imported from the file
+[`data/usmort.json`](https://github.com/klpn/Usmort.jl/blob/master/data/usmort.json),
+which can be easily extended.
+
 In order to retrieve all deaths for males in 2006:
 ```julia
 using Usmort
-totexpr = "[A-Y]"
-totm06 = ageca(2006, "M", totexpr)
+totexpr = Usmort.cas[:tot][:expr] 
+totm06 = ageca(2006, :M, totexpr)
 ```
 
-In order to retrieve all deaths among females in 2006, with influenza or
-pneumonia on the death certificate, and then calculate the proportion of these
-deaths with circulatory disease as underlying cause:
+In order to retrieve all deaths among females in 2006, with respiratory
+infection (ICD-10 J00--J22) on the death certificate, and then calculate
+the proportion of these deaths with circulatory disease as underlying cause:
 ```julia
 using Usmort
-totexpr = "[A-Y]"
-influiexpr =  "J(09|1[0-8])"
-circexpr = "I|F01"
-influi06ent = ageca(2006, "F", totexpr, influiexpr)
-circinfluif06ent = ageca(2006, "F", circexpr, influiexpr)
-circinfluif06entp = caprop(circinfluif06ent, influif06ent)
+totexpr = Usmort.cas[:tot][:expr] 
+respinfexpr = Usmort.cas[:respinf][:expr] 
+circexpr = Usmort.cas[:circ][:expr] 
+respinf06ent = ageca(2006, :F, totexpr, respinfexpr)
+circrespinff06ent = ageca(2006, :F, circexpr, respinfexpr)
+circrespinff06entp = caprop(circrespinff06ent, respinff06ent)
 ```
 
 Queries can be refined by using keywords in the `ageca` calls. If a par of
@@ -70,12 +75,47 @@ the data files). In order to retrieve all 2006 deaths among never-married
 females with lower than high school education:
 ```julia
 using Usmort, MySQL
-totexpr = "[A-Y]"
+totexpr = Usmort.cas[:tot][:expr] 
 lowed89 = [0,8]
 lowed03 = [1,1]
-totflowedsing06 = ageca(2006, "F", totexpr; edu89 = lowed89, edu03 = lowed03,
+totflowedsing06 = ageca(2006, :F, totexpr; edu89 = lowed89, edu03 = lowed03,
 	Mart = ["S", "=",  MYSQL_TYPE_VARCHAR])
 ```
 
 The performance of queries can often be improved by adding indexes on e.g. the
 `Sex` and `Datayear` fields in the `Usdeaths` table.
+
+There are some functions to help with visualization along the dimensions
+defined in `data/usmort.json`. Plots are made with
+[matplotlib](https://github.com/matplotlib/matplotlib), called via
+[PyPlot](http://github.com/JuliaPy/PyPlot.jl).
+
+In order to plot age-specific proportions of deaths in 2006 due to tumors (as
+underlying cause) among females for different levels of education:
+```julia
+using Usmort
+ed06ftot = framedict(2006, "F", :tot, :ed)
+ed06ftum = framedict(2006, "F", :tum, :ed)
+propplot(ed06ftum, ed06ftot)
+```
+
+In order to plot age-specific proportions of deaths in 2006 due to respiratory
+infection among females stacked by place of death:
+```julia
+using Usmort
+place06frespinf  = framedict(2006, "F", :respinf, :dplace)
+stackdimplot(place06frespinf)
+```
+
+In order to plot age-specific proportions of deaths in 2006 and 2014 due to
+tumors among females with short education:
+```julia
+using Usmort
+ed06ftot = framedict(2006, "F", :tot, :ed)
+ed06ftum = framedict(2006, "F", :tum, :ed)
+ed14ftot = framedict(2014, "F", :tot, :ed)
+ed14ftum = framedict(2014, "F", :tum, :ed)
+edftum = [ed06ftum, ed14ftum]
+edftot = [ed06ftot, ed14ftot]
+groupyearplot(edftum, edftot, 1)
+```

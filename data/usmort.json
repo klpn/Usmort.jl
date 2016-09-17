@@ -1,0 +1,186 @@
+{
+ "dims": {
+  "racere5": {
+   "label": "etnicitet",
+   "groups": [
+    {
+     "label": "vit",
+     "code": 1
+    },
+    {
+     "label": "svart",
+     "code": 2
+    },
+    {
+     "label": "indian",
+     "code": 3
+    },
+    {
+     "label": "asiat",
+     "code": 4
+    }
+   ],
+   "sqltype": 2
+  },
+  "dplace": {
+   "label": "dödsplats",
+   "groups": [
+    {
+     "label": "klinik slutenvård",
+     "code": 1
+    },
+    {
+     "label": "klinik öppenvård/akut",
+     "code": 2
+    },
+    {
+     "label": "klinik död vid ankomst",
+     "code": 3
+    },
+    {
+     "label": "bostad",
+     "code": 4
+    },
+    {
+     "label": "hospice",
+     "code": 5
+    },
+    {
+     "label": "sjukhem",
+     "code": 6
+    },
+    {
+     "label": "annan",
+     "code": 7
+    },
+    {
+     "label": "okänd",
+     "code": 9
+    }
+   ],
+   "sqltype": 2
+  },
+  "ed": {
+   "label": "utbildning",
+   "groups": [
+    {
+     "label": "låg",
+     "code": [
+      0,
+      8,
+      1,
+      1
+     ]
+    },
+    {
+     "label": "highschool",
+     "code": [
+      9,
+      12,
+      2,
+      3
+     ]
+    },
+    {
+     "label": "college kort",
+     "code": [
+      13,
+      14,
+      4,
+      5
+     ]
+    },
+    {
+     "label": "college lång",
+     "code": [
+      15,
+      17,
+      6,
+      8
+     ]
+    },
+    {
+     "label": "okänd",
+     "code": [
+      99,
+      99,
+      9,
+      9
+     ]
+    }
+   ]
+  },
+  "mart": {
+   "label": "civilstånd",
+   "groups": [
+    {
+     "label": "ogift",
+     "code": "S"
+    },
+    {
+     "label": "gift",
+     "code": "M"
+    },
+    {
+     "label": "änka/änkling",
+     "code": "W"
+    },
+    {
+     "label": "skild",
+     "code": "D"
+    },
+    {
+     "label": "okänd",
+     "code": "U"
+    }
+   ],
+   "sqltype": 15
+  }
+ },
+ "cas": {
+  "tum": {
+   "expr": "C|D[0-4]",
+   "label": "tumör"
+  },
+  "circ": {
+   "expr": "I|F01",
+   "label": "cirkulation"
+  },
+  "respinf": {
+   "expr": "J[0-2]",
+   "label": "luftvägsinfektion"
+  },
+  "ihd": {
+   "expr": "I2[0-5]",
+   "label": "ischemisk hjärtsjukdom"
+  },
+  "ext": {
+   "expr": "[V-Y]",
+   "label": "yttre orsaker"
+  },
+  "inf": {
+   "expr": "[A-B]|G0|J[0-2]|N1[0-2]",
+   "label": "infektion"
+  },
+  "tot": {
+   "expr": "[A-Y]",
+   "label": "alla orsaker"
+  },
+  "str": {
+   "expr": "I6[0-9]|F01",
+   "label": "slaganfall"
+  },
+  "illdef": {
+   "expr": "R",
+   "label": "illa definierad"
+  },
+  "dem": {
+   "expr": "F0[1-3]|G3[0-2]",
+   "label": "demens"
+  }
+ },
+ "sexlabels": {
+  "M": "män",
+  "F": "kvinnor"
+ }
+}
