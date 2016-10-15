@@ -45,7 +45,7 @@ totexpr = Usmort.cas[:tot][:expr]
 totm06 = ageca(2006, :M, totexpr)
 ```
 
-In order to retrieve all deaths among females in 2006, with respiratory
+In order to retrieve all deaths among females in 2006 with respiratory
 infection (ICD-10 J00--J22) on the death certificate, and then calculate
 the proportion of these deaths with circulatory disease as underlying cause:
 ```julia
@@ -97,6 +97,16 @@ using Usmort
 ed06ftot = framedict(2006, :F, :tot, :ed)
 ed06ftum = framedict(2006, :F, :tum, :ed)
 propplot(ed06ftum, ed06ftot)
+```
+
+In order to plot age-specific proportions of deaths in 2006 due to respiratory
+infection (as mentioned on the death certificate) among females for different
+levels of education:
+```julia
+using Usmort
+ed06ftot = framedict(2006, :F, :tot, :ed)
+ed06ftotrespinf = framedict(2006, :F, :tot, :ed, :respinf)
+propplot(ed06ftotrespinf, ed06ftot)
 ```
 
 In order to plot age-specific proportions of deaths in 2006 due to respiratory

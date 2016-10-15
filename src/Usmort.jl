@@ -54,7 +54,7 @@ function caprop(caf1, caf2)
 		prop = caf1[:N]./caf2[:N])
 end
 
-function framedict(year, sex, ca, dim; extraargs...)
+function framedict(year, sex, uc, dim, ent = :tot; extraargs...)
 	frames = []
 	groupdicts = dims[dim][:groups]
 	extraargsdict = Dict(extraargs)
@@ -71,33 +71,41 @@ function framedict(year, sex, ca, dim; extraargs...)
 				)
 		end
 		pardict = merge(extraargsdict, dimdict)
-		frame = ageca(year, sex, cas[ca][:expr]; pardict...)
+		frame = ageca(year, sex, cas[uc][:expr], cas[ent][:expr]; pardict...)
 		push!(frames, frame)
 	end
 	ns = map((x)->x[:N], frames)
 	totframe = copy(frames[1])
 	totframe[:N] = foldr(.+, ns)
 
-	return Dict(:year=>year, :sex=>sex, :ca=>ca, :dim=>dim, :frames=>frames,
+	return Dict(:year=>year, :sex=>sex, :uc=>uc, :dim=>dim, :ent=>ent, :frames=>frames,
 		:totframe=>totframe)
 end
 
-function propplot(fd1, fd2, ages = 10:26)
-	groupdicts = dims[fd1[:dim]][:groups]
+function calabel(framedict)
+	if framedict[:ent] == :tot
+		return cas[framedict[:uc]][:label]
+	else
+		return "($(cas[framedict[:uc]][:label])|$(cas[framedict[:ent]][:label]))"
+	end
+end
+
+function propplot(framedict1, framedict2, ages = 10:26)
+	groupdicts = dims[framedict1[:dim]][:groups]
 	for grno in 1:size(groupdicts, 1)
-		prop = caprop(fd1[:frames][grno],
-			fd2[:frames][grno])
+		prop = caprop(framedict1[:frames][grno],
+			framedict2[:frames][grno])
 		plot(prop[ages, :agest], prop[ages, :prop],
 			label = groupdicts[grno][:label])
 	end
+	yr = framedict1[:year]
+	sexlabel = sexlabels[framedict1[:sex]]
+	ca1label = calabel(framedict1)
+	ca2label = calabel(framedict2)
+	dimlabel = dims[framedict1[:dim]][:label]
 	xlabel("Ålder")
-	ylabel("Andel")
-	yr = fd1[:year]
-	sexlabel = sexlabels[fd1[:sex]]
-	ca1label = cas[fd1[:ca]][:label]
-	ca2label = cas[fd2[:ca]][:label]
-	dimlabel = dims[fd1[:dim]][:label]
-	title("Dödsfall $ca1label/$ca2label givet $dimlabel $sexlabel USA $yr")
+	ylabel("Dödsfall $ca1label/$ca2label")
+	title("Andel dödsfall givet $dimlabel $sexlabel USA $yr")
 	legend(loc=2, framealpha = 0.5)
 	grid(1)
 	show()
@@ -111,13 +119,12 @@ function stackdimplot(framedict, ages = 10:26)
 	stackplot(framedict[:totframe][ages, :agest], propars_ages,
 		labels = dimlabs,
 		colors = ["b","g","r","c","m","y","k","w"])
-	xlabel("Ålder")
-	ylabel("Andel")
 	yr = framedict[:year]
 	sexlabel = sexlabels[framedict[:sex]]
-	calabel = cas[framedict[:ca]][:label]
 	dimlabel = ucfirst(dims[framedict[:dim]][:label])
-	title("$dimlabel givet dödsorsak $calabel $sexlabel USA $yr")
+	xlabel("Ålder")
+	ylabel("Andel")
+	title("$dimlabel givet dödsorsak $(calabel(framedict)) $sexlabel USA $yr")
 	ylim(0,1)
 	legend(loc=2, framealpha = 0.5)
 	show()
@@ -125,35 +132,35 @@ end
 
 function groupyearplot(framedicts1, framedicts2, grno, ages = 10:26)
 	for fdind in 1:size(framedicts1, 1)
-		fd1 = framedicts1[fdind]
-		fd2 = framedicts2[fdind]
+		framedict1 = framedicts1[fdind]
+		framedict2 = framedicts2[fdind]
 		if grno == 0
-			frame1 = fd1[:totframe]
-			frame2 = fd2[:totframe]
+			frame1 = framedict1[:totframe]
+			frame2 = framedict2[:totframe]
 			grlab = ""
 		else
-			frame1 = fd1[:frames][grno]
-			frame2 = fd2[:frames][grno]
-			grlab = dims[fd1[:dim]][:groups][grno][:label]
+			frame1 = framedict1[:frames][grno]
+			frame2 = framedict2[:frames][grno]
+			grlab = dims[framedict1[:dim]][:groups][grno][:label]
 		end
 		prop = caprop(frame1, frame2)
 		plot(prop[ages, :agest], prop[ages, :prop],
-			label = "$(fd1[:year]) $grlab")
+			label = "$(framedict1[:year]) $grlab")
 	end
 	legend(loc=2, framealpha = 0.5)
+	framedict1 = framedicts1[1]
+	framedict2 = framedicts2[1]
+	sexlabel = sexlabels[framedict1[:sex]]
+	ca1label = calabel(framedict1)
+	ca2label = calabel(framedict2)
 	xlabel("Ålder")
-	ylabel("Andel")
-	fd1 = framedicts1[1]
-	fd2 = framedicts2[1]
-	sexlabel = sexlabels[fd1[:sex]]
-	ca1label = cas[fd1[:ca]][:label]
-	ca2label = cas[fd2[:ca]][:label]
+	ylabel("Dödsfall $ca1label/$ca2label")
 	if grno == 0
 		dimlabel = ""
 	else
-		dimlabel = "givet $(dims[fd1[:dim]][:label]) "
+		dimlabel = "givet $(dims[framedict1[:dim]][:label]) "
 	end
-	title("Dödsfall $ca1label/$ca2label $dimlabel$sexlabel USA")
+	title("Dödsfall $dimlabel$sexlabel USA")
 	grid(1)
 	show()
 end
