@@ -21,13 +21,18 @@ for i in 1:19
 end
 concstr = string(concstr, "Ent20)")
 
-function ageca(year, sex, uc, ent = "[A-Y]";
+function ageca(year, sex, uc, ent = ["[A-Y]"];
 	edu89 = [0, 99], edu03 = [1, 9], kwargs...)
 	qstr = """SELECT AgeRe27 FROM Usdeaths WHERE Datayear = ? 
-		AND Sex = ? AND UcIcd REGEXP ? AND $concstr REGEXP ?"""
+		AND Sex = ? AND UcIcd REGEXP ?"""
 	partypes = [MYSQL_TYPE_SHORT, MYSQL_TYPE_VARCHAR, 
-		MYSQL_TYPE_VARCHAR, MYSQL_TYPE_VARCHAR]
-	pars = [year, string(sex), uc, ent]
+		MYSQL_TYPE_VARCHAR]
+	pars = [year, string(sex), uc]
+	for entstr in ent
+		qstr = "$qstr AND $concstr REGEXP ?"
+		partypes = [partypes; MYSQL_TYPE_VARCHAR]
+		pars = [pars; entstr]
+	end
 	if edu89[2]-edu89[1]<99
 		qstr = """$qstr AND ((Edurep=0 AND Edu89>=? AND Edu89<=?) 
 		OR (Edurep=1 AND Edu03>=? AND Edu03<=?))"""
@@ -39,7 +44,8 @@ function ageca(year, sex, uc, ent = "[A-Y]";
 		partypes = [partypes; val[3]]
 		pars = [pars; val[1]]
 	end
-	con = mysql_connect("localhost", "usmuser", "usmort", "Usmort")
+	con = mysql_connect("localhost", "usmuser", "usmort", "Usmort",
+		socket = "/run/mysqld/mysqld.sock")
 	mysql_stmt_prepare(con, qstr)
 	df = mysql_execute(con, partypes, pars)
 	mysql_disconnect(con)
@@ -54,10 +60,11 @@ function caprop(caf1, caf2)
 		prop = caf1[:N]./caf2[:N])
 end
 
-function framedict(year, sex, uc, dim, ent = :tot; extraargs...)
+function framedict(year, sex, uc, dim, ent = [:tot]; extraargs...)
 	frames = []
 	groupdicts = dims[dim][:groups]
 	extraargsdict = Dict(extraargs)
+	entexprs = map((ent)->cas[ent][:expr], ent)
 	for grno in 1:size(groupdicts, 1)
 		code = groupdicts[grno][:code]
 		if dim == :ed
@@ -71,7 +78,7 @@ function framedict(year, sex, uc, dim, ent = :tot; extraargs...)
 				)
 		end
 		pardict = merge(extraargsdict, dimdict)
-		frame = ageca(year, sex, cas[uc][:expr], cas[ent][:expr]; pardict...)
+		frame = ageca(year, sex, cas[uc][:expr], entexprs; pardict...)
 		push!(frames, frame)
 	end
 	ns = map((x)->x[:N], frames)
@@ -83,10 +90,17 @@ function framedict(year, sex, uc, dim, ent = :tot; extraargs...)
 end
 
 function calabel(framedict)
-	if framedict[:ent] == :tot
+	if framedict[:ent] == [:tot]
 		return cas[framedict[:uc]][:label]
 	else
-		return "($(cas[framedict[:uc]][:label])|$(cas[framedict[:ent]][:label]))"
+		entlab = cas[framedict[:ent][1]][:label]
+		entn = size(framedict[:ent])[1]
+		if entn > 1
+			for i in 2:entn
+				entlab = "$entlab \u2229 $(cas[framedict[:ent][i]][:label])"
+			end
+		end
+		return "($(cas[framedict[:uc]][:label])|$entlab)"
 	end
 end
 

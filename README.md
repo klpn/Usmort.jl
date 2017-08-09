@@ -11,7 +11,7 @@ review the
 for the years you are interested in in order to understand the structure of the
 files.
 
-##Setup
+## Setup
 It is assumed that you have Julia installed, as well as access to a
 MySQL/MariaDB server where you can create databases.
 
@@ -26,7 +26,7 @@ MySQL/MariaDB server where you can create databases.
    `src/Usdeathsimp.sql` to import it into the database, e.g.  `mysql -u root -p
    --local-infile=1 <Usdeathsimp.sql`.
 
-##Usage
+## Usage
 The function `ageca` is used to build a DataFrame with the number of deaths for
 a given sex and year matching regular expressions in the underlying cause of
 death and the concatenation of the entity-axis conditions on the death certificate,
@@ -105,7 +105,7 @@ levels of education:
 ```julia
 using Usmort
 ed06ftot = framedict(2006, :F, :tot, :ed)
-ed06ftotrespinf = framedict(2006, :F, :tot, :ed, :respinf)
+ed06ftotrespinf = framedict(2006, :F, :tot, :ed, [:respinf])
 propplot(ed06ftotrespinf, ed06ftot)
 ```
 
