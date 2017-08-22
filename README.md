@@ -25,6 +25,10 @@ MySQL/MariaDB server where you can create databases.
 3. Rename the uncompressed data file to `usdeaths` and use
    `src/Usdeathsimp.sql` to import it into the database, e.g.  `mysql -u root -p
    --local-infile=1 <Usdeathsimp.sql`.
+4. Definitions of different causes of deaths are taken from the data file used
+   by my [Mortchartgen](https://github.com/klpn/Mortchartgen.jl) package. You
+   can install that package in Julia e.g. by
+   `Pkg.clone("https://github.com/klpn/Mortchartgen.jl.git")`.
 
 ## Usage
 The function `ageca` is used to build a DataFrame with the number of deaths for
