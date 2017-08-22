@@ -2,13 +2,16 @@ module Usmort
 
 using MySQL, DataFrames, PyCall, PyPlot
 import JSON
-export ageca, caprop, framedict, propplot, stackdimplot, groupyearplot
+export caexpr, ageca, caprop, framedict, propplot, stackdimplot, groupyearplot
 
 datapath = joinpath(Pkg.dir("Usmort"), "data", "usmort.json")
+chgendatapath = joinpath(Pkg.dir("Mortchartgen"), "data", "chartgen.json")
 usmortdata = JSON.parsefile(datapath; dicttype = Dict{Symbol,Any})
+chgendata = JSON.parsefile(chgendatapath; dicttype = Dict{Symbol,Any})
 dims = usmortdata[:dims]
-cas = usmortdata[:cas]
 sexlabels = usmortdata[:sexlabels]
+cas = chgendata[:causes]
+caexpr(ca) = cas[ca][:causeexpr][Symbol(10)]
 
 PyDict(matplotlib["rcParams"])["axes.formatter.use_locale"] = true
 
@@ -60,11 +63,11 @@ function caprop(caf1, caf2)
 		prop = caf1[:N]./caf2[:N])
 end
 
-function framedict(year, sex, uc, dim, ent = [:tot]; extraargs...)
+function framedict(year, sex, uc, dim, ent = [:all]; extraargs...)
 	frames = []
 	groupdicts = dims[dim][:groups]
 	extraargsdict = Dict(extraargs)
-	entexprs = map((ent)->cas[ent][:expr], ent)
+	entexprs = map((ent)->caexpr(ent), ent)
 	for grno in 1:size(groupdicts, 1)
 		code = groupdicts[grno][:code]
 		if dim == :ed
@@ -78,29 +81,28 @@ function framedict(year, sex, uc, dim, ent = [:tot]; extraargs...)
 				)
 		end
 		pardict = merge(extraargsdict, dimdict)
-		frame = ageca(year, sex, cas[uc][:expr], entexprs; pardict...)
+		frame = ageca(year, sex, caexpr(uc), entexprs; pardict...)
 		push!(frames, frame)
 	end
 	ns = map((x)->x[:N], frames)
-	totframe = copy(frames[1])
-	totframe[:N] = foldr(.+, ns)
-
+	allframe = copy(frames[1])
+	allframe[:N] = foldr(.+, ns)
 	return Dict(:year=>year, :sex=>sex, :uc=>uc, :dim=>dim, :ent=>ent, :frames=>frames,
-		:totframe=>totframe)
+		:allframe=>allframe)
 end
 
-function calabel(framedict)
-	if framedict[:ent] == [:tot]
-		return cas[framedict[:uc]][:label]
+function calabel(framedict, language = :sv)
+	if framedict[:ent] == [:all]
+		return cas[framedict[:uc]][:alias][language]
 	else
-		entlab = cas[framedict[:ent][1]][:label]
+		entlab = cas[framedict[:ent][1]][:alias][language]
 		entn = size(framedict[:ent])[1]
 		if entn > 1
 			for i in 2:entn
-				entlab = "$entlab \u2229 $(cas[framedict[:ent][i]][:label])"
+				entlab = "$entlab \u2229 $(cas[framedict[:ent][i]][:alias][language])"
 			end
 		end
-		return "($(cas[framedict[:uc]][:label])|$entlab)"
+		return "($(cas[framedict[:uc]][:alias][language])|$entlab)"
 	end
 end
 
@@ -126,11 +128,11 @@ function propplot(framedict1, framedict2, ages = 10:26)
 end
 
 function stackdimplot(framedict, ages = 10:26)
-	propars = map((x) -> caprop(x, framedict[:totframe])[:prop],
+	propars = map((x) -> caprop(x, framedict[:allframe])[:prop],
 		framedict[:frames])
 	propars_ages = map((x) -> x[ages], propars)
 	dimlabs = map((x)->x[:label], dims[framedict[:dim]][:groups])
-	stackplot(framedict[:totframe][ages, :agest], propars_ages,
+	stackplot(framedict[:allframe][ages, :agest], propars_ages,
 		labels = dimlabs,
 		colors = ["b","g","r","c","m","y","k","w"])
 	yr = framedict[:year]
@@ -149,8 +151,8 @@ function groupyearplot(framedicts1, framedicts2, grno, ages = 10:26)
 		framedict1 = framedicts1[fdind]
 		framedict2 = framedicts2[fdind]
 		if grno == 0
-			frame1 = framedict1[:totframe]
-			frame2 = framedict2[:totframe]
+			frame1 = framedict1[:allframe]
+			frame2 = framedict2[:allframe]
 			grlab = ""
 		else
 			frame1 = framedict1[:frames][grno]

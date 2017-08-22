@@ -41,8 +41,8 @@ which can be easily extended.
 In order to retrieve all deaths for males in 2006:
 ```julia
 using Usmort
-totexpr = Usmort.cas[:tot][:expr] 
-totm06 = ageca(2006, :M, totexpr)
+allexpr = caexpr(:all)
+allm06 = ageca(2006, :M, allexpr)
 ```
 
 In order to retrieve all deaths among females in 2006 with respiratory
@@ -50,11 +50,11 @@ infection (ICD-10 J00--J22) on the death certificate, and then calculate
 the proportion of these deaths with circulatory disease as underlying cause:
 ```julia
 using Usmort
-totexpr = Usmort.cas[:tot][:expr] 
-respinfexpr = Usmort.cas[:respinf][:expr] 
-circexpr = Usmort.cas[:circ][:expr] 
-respinf06ent = ageca(2006, :F, totexpr, respinfexpr)
-circrespinff06ent = ageca(2006, :F, circexpr, respinfexpr)
+allexpr = caexpr(:all)
+respinfexpr = Usmort.caexpr(:respinf)
+circexpr = Usmort.caexpr(:circ)
+respinff06ent = ageca(2006, :F, allexpr, [respinfexpr])
+circrespinff06ent = ageca(2006, :F, circexpr, [respinfexpr])
 circrespinff06entp = caprop(circrespinff06ent, respinff06ent)
 ```
 
@@ -75,10 +75,10 @@ the data files). In order to retrieve all 2006 deaths among never-married
 females with lower than high school education:
 ```julia
 using Usmort, MySQL
-totexpr = Usmort.cas[:tot][:expr] 
+allexpr = caexpr(:all)
 lowed89 = [0,8]
 lowed03 = [1,1]
-totflowedsing06 = ageca(2006, :F, totexpr; edu89 = lowed89, edu03 = lowed03,
+allflowedsing06 = ageca(2006, :F, allexpr; edu89 = lowed89, edu03 = lowed03,
 	Mart = ["S", "=",  MYSQL_TYPE_VARCHAR])
 ```
 
@@ -94,9 +94,9 @@ In order to plot age-specific proportions of deaths in 2006 due to tumors (as
 underlying cause) among females for different levels of education:
 ```julia
 using Usmort
-ed06ftot = framedict(2006, :F, :tot, :ed)
+ed06fall = framedict(2006, :F, :all, :ed)
 ed06ftum = framedict(2006, :F, :tum, :ed)
-propplot(ed06ftum, ed06ftot)
+propplot(ed06ftum, ed06fall)
 ```
 
 In order to plot age-specific proportions of deaths in 2006 due to respiratory
@@ -104,16 +104,16 @@ infection (as mentioned on the death certificate) among females for different
 levels of education:
 ```julia
 using Usmort
-ed06ftot = framedict(2006, :F, :tot, :ed)
-ed06ftotrespinf = framedict(2006, :F, :tot, :ed, [:respinf])
-propplot(ed06ftotrespinf, ed06ftot)
+ed06fall = framedict(2006, :F, :all, :ed)
+ed06fallrespinf = framedict(2006, :F, :all, :ed, [:respinf])
+propplot(ed06fallrespinf, ed06fall)
 ```
 
 In order to plot age-specific proportions of deaths in 2006 due to respiratory
 infection among females stacked by place of death:
 ```julia
 using Usmort
-place06frespinf  = framedict(2006, :F, :respinf, :dplace)
+place06frespinf = framedict(2006, :F, :respinf, :dplace)
 stackdimplot(place06frespinf)
 ```
 
@@ -121,11 +121,11 @@ In order to plot age-specific proportions of deaths in 2006 and 2014 due to
 tumors among females with short education:
 ```julia
 using Usmort
-ed06ftot = framedict(2006, :F, :tot, :ed)
+ed06fall = framedict(2006, :F, :all, :ed)
 ed06ftum = framedict(2006, :F, :tum, :ed)
-ed14ftot = framedict(2014, :F, :tot, :ed)
+ed14fall = framedict(2014, :F, :all, :ed)
 ed14ftum = framedict(2014, :F, :tum, :ed)
-edftum = [ed06ftum, ed14ftum]
-edftot = [ed06ftot, ed14ftot]
-groupyearplot(edftum, edftot, 1)
+edftum = [ed06ftum; ed14ftum]
+edfall = [ed06fall; ed14fall]
+groupyearplot(edftum, edfall, 1)
 ```
