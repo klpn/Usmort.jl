@@ -1,6 +1,8 @@
 julia 0.4
+Missings
 MySQL
 DataFrames
 PyPlot
+PyCall
 JSON
 Mortchartgen

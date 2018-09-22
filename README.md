@@ -69,10 +69,8 @@ the 1989 and 2003 standards with the education level within the interval
 defined by `[a,b]`.
 
 Further keyword arguments may be given in the format `Field = [expression,
-operator, type]`, where `expression` is an expression to match, `operator` is
-the name of a MySQL comparison operator or function like `REGEXP`, and `type`
-is a MySQL data type (see the documentation to the [MySQL
-package](https://github.com/JuliaDB/MySQL.jl)). See
+operator]`, where `expression` is an expression to match and `operator` is
+the name of a MySQL comparison operator or function like `REGEXP`. See
 [`src/Usdeathsimp.sql`](https://github.com/klpn/Usmort.jl/blob/master/src/Usdeathsimp.sql)
 for valid field names (and compare their position with the documentation for
 the data files). In order to retrieve all 2006 deaths among never-married

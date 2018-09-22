@@ -1,11 +1,12 @@
 module Usmort
 
-using MySQL, DataFrames, PyCall, PyPlot
-import JSON
+using Missings, MySQL, DataFrames, PyCall, PyPlot
+import JSON, Mortchartgen
 export caexpr, ageca, caprop, framedict, propplot, stackdimplot, groupyearplot
 
-datapath = joinpath(Pkg.dir("Usmort"), "data", "usmort.json")
-chgendatapath = joinpath(Pkg.dir("Mortchartgen"), "data", "chartgen.json")
+mainpath = normpath(@__DIR__, "..")
+datapath = normpath(mainpath, "data", "usmort.json")
+chgendatapath = normpath(Mortchartgen.datapath, "chartgen.json")
 usmortdata = JSON.parsefile(datapath; dicttype = Dict{Symbol,Any})
 chgendata = JSON.parsefile(chgendatapath; dicttype = Dict{Symbol,Any})
 dims = usmortdata[:dims]
@@ -18,43 +19,29 @@ PyDict(matplotlib["rcParams"])["axes.formatter.use_locale"] = true
 ageres = DataFrame(AgeRe27 = collect(1:27), 
 	agest = [0;1/12;collect(1:4);collect(5:5:100);-1])
 
-concstr = "CONCAT("
-for i in 1:19
-	concstr = string(concstr, "Ent", i, ",")
-end
-concstr = string(concstr, "Ent20)")
+concstr = reduce(*, ["CONCAT("; map(i->"Ent$i,", 1:19); "Ent20)"])
 
 function ageca(year, sex, uc, ent = ["[A-Y]"];
 	edu89 = [0, 99], edu03 = [1, 9], kwargs...)
-	qstr = """SELECT AgeRe27 FROM Usdeaths WHERE Datayear = ? 
-		AND Sex = ? AND UcIcd REGEXP ?"""
-	partypes = [MYSQL_TYPE_SHORT, MYSQL_TYPE_VARCHAR, 
-		MYSQL_TYPE_VARCHAR]
-	pars = [year, string(sex), uc]
+	qstr = """SELECT AgeRe27 FROM Usdeaths WHERE Datayear = $(year) 
+	AND Sex = '$(sex)' AND UcIcd REGEXP '$(uc)'"""
 	for entstr in ent
-		qstr = "$qstr AND $concstr REGEXP ?"
-		partypes = [partypes; MYSQL_TYPE_VARCHAR]
-		pars = [pars; entstr]
+		qstr = "$qstr AND $concstr REGEXP '$entstr'"
 	end
 	if edu89[2]-edu89[1]<99
-		qstr = """$qstr AND ((Edurep=0 AND Edu89>=? AND Edu89<=?) 
-		OR (Edurep=1 AND Edu03>=? AND Edu03<=?))"""
-		partypes = [partypes; fill(MYSQL_TYPE_SHORT, 4)]
-		pars = [pars; edu89[1]; edu89[2]; edu03[1]; edu03[2]]
+		qstr = """$qstr AND ((Edurep=0 AND Edu89>=$(edu89[1]) AND Edu89<=$(edu89[2])) 
+		OR (Edurep=1 AND Edu03>=$(edu03[1]) AND Edu03<=$(edu03[2])))"""
 	end
 	for (key, val) in kwargs
-		qstr = "$qstr AND $key $(val[2]) ?"
-		partypes = [partypes; val[3]]
-		pars = [pars; val[1]]
+		qstr = "$qstr AND $key $(val[2]) '$(val[1])'"
 	end
-	con = mysql_connect("localhost", "usmuser", "usmort", "Usmort",
-		socket = "/run/mysqld/mysqld.sock")
-	mysql_stmt_prepare(con, qstr)
-	df = mysql_execute(con, partypes, pars)
-	mysql_disconnect(con)
+	con = MySQL.connect("localhost", "usmuser", "usmort", db = "Usmort",
+		unix_socket = "/run/mysqld/mysqld.sock")
+	df = MySQL.query(con, qstr, DataFrame)
+	MySQL.disconnect(con)
 	dfre = by(df, :AgeRe27, df -> DataFrame(N=size(df,1)))
 	dfrej = sort!(join(ageres, dfre, on = :AgeRe27, kind = :left))
-	dfrej[isna(dfrej[:N]), :N] = 0
+	dfrej[:N] = collect(Missings.replace(dfrej[:N], 0))
 	return dfrej
 end
 
@@ -86,7 +73,7 @@ function framedict(year, sex, uc, dim, ent = [:all]; extraargs...)
 	end
 	ns = map((x)->x[:N], frames)
 	allframe = copy(frames[1])
-	allframe[:N] = foldr(.+, ns)
+	allframe[:N] = foldr((a,b) -> a.+b, ns)
 	return Dict(:year=>year, :sex=>sex, :uc=>uc, :dim=>dim, :ent=>ent, :frames=>frames,
 		:allframe=>allframe)
 end
