@@ -14,7 +14,7 @@ sexlabels = usmortdata[:sexlabels]
 cas = chgendata[:causes]
 caexpr(ca) = cas[ca][:causeexpr][Symbol(10)]
 
-PyDict(matplotlib["rcParams"])["axes.formatter.use_locale"] = true
+PyDict(matplotlib."rcParams")["axes.formatter.use_locale"] = true
 
 ageres = DataFrame(AgeRe27 = collect(1:27), 
 	agest = [0;1/12;collect(1:4);collect(5:5:100);-1])
@@ -37,7 +37,7 @@ function ageca(year, sex, uc, ent = ["[A-Y]"];
 	end
 	con = MySQL.connect("localhost", "usmuser", "usmort", db = "Usmort",
 		unix_socket = "/run/mysqld/mysqld.sock")
-	df = MySQL.query(con, qstr, DataFrame)
+	df = MySQL.Query(con, qstr) |> DataFrame
 	MySQL.disconnect(con)
 	dfre = by(df, :AgeRe27, df -> DataFrame(N=size(df,1)))
 	dfrej = sort!(join(ageres, dfre, on = :AgeRe27, kind = :left))
